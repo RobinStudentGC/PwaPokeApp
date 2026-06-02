@@ -9,6 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@material/button": "^14.0.0",
+    "@material/image-list": "^14.0.0",
+    "@material/menu": "^14.0.0",
+    "@material/textfield": "^14.0.0",
+    "@material/top-app-bar": "^14.0.0",
     "vue": "^3.5.32",
     "vue-router": "^5.0.4"
   },
