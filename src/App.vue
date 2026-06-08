@@ -1,155 +1,107 @@
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue'
-import { MDCTopAppBar } from '@material/top-app-bar'
+import { ref, onMounted, computed } from 'vue';
+import { fetchPokemon, fetchPokemonDetails } from './data/pokemon';
+import TopBar from './components/TopBar.vue';
+import PokemonList from './components/PokemonList.vue';
+import PaginationButtons from './components/PaginationButtons.vue';
+import Sheet from './components/Sheet.vue';
 
-const topBar = ref(null)
+const pokemonPaginated = ref([]);
+const fetchLimit = 1350;
+const paginationLimit = 40;
 
-const searchMode = ref(false)
-const searchQuery = ref('')
+const currentPage = ref(1);
+const pokemonCount = ref(0);
+const filteredPokemon = ref([]);
+const sheetRef = ref(null);
 
-const searchInput = ref(null)
+const pageCount = computed(() =>
+  Math.ceil(filteredPokemon.value.length / paginationLimit)
+);
+
+let allPokemon = [];
+
+function applySearch(query) {
+  currentPage.value = 1;
+  if (!query) {
+    filteredPokemon.value = allPokemon;
+  } else {
+    const q = query.toLowerCase();
+    filteredPokemon.value = allPokemon.filter((p) =>
+      p.name.toLowerCase().includes(q)
+    );
+  }
+  pokemonPaginated.value = filteredPokemon.value.slice(0, paginationLimit);
+}
+
+let timer = null;
 
 function updateSearchResults(query) {
-  console.log('Live search:', query)
-
-  // Example later:
-  // filteredList.value = fullList.value.filter(p =>
-  //   p.name.toLowerCase().includes(query.toLowerCase())
-  // )
+  clearTimeout(timer);
+  timer = setTimeout(() => applySearch(query), 200);
 }
 
-// Bekijkt de input veranderingen en roept de live search functie aan.
-watch(searchQuery, (newValue) => {
-  updateSearchResults(newValue)
-})
-
-function openSearch() {
-  searchMode.value = true
-
-  nextTick(() => {
-    searchInput.value?.focus()
-  })
-}
-
-function closeSearch() {
-  searchMode.value = false
-}
-
-function clearSearch() {
-  searchQuery.value = ''
-}
-
-onMounted(() => {
-  if (topBar.value) {
-    new MDCTopAppBar(topBar.value)
+function updatePagination(direction) {
+  if (direction === 'previous' && currentPage.value > 1) {
+    currentPage.value--;
+  } else if (direction === 'next' && currentPage.value < pageCount.value) {
+    currentPage.value++;
   }
-})
+  const start = (currentPage.value - 1) * paginationLimit;
+  pokemonPaginated.value = filteredPokemon.value.slice(start, start + paginationLimit);
+}
+
+async function handleViewPokemon(pokemonId) {
+  let title = `Pokémon #${pokemonId}`;
+  let details = null;
+  try {
+    details = await fetchPokemonDetails(pokemonId);
+    title = details?.name
+      ? details.name.charAt(0).toUpperCase() + details.name.slice(1)
+      : title;
+  } catch (error) {
+    console.error('Error fetching Pokémon details:', error);
+  }
+
+  sheetRef.value.openSheet({
+    pokemonId: pokemonId,
+    pokemonDetail: details,
+    title: title
+  });
+}
+
+onMounted(async () => {
+  const storageKey = 'pokemon-list';
+  const cached = localStorage.getItem(storageKey);
+
+  if (cached) {
+    allPokemon = JSON.parse(cached);
+    pokemonCount.value = allPokemon.length;
+  } else {
+    allPokemon = await fetchPokemon(fetchLimit);
+    pokemonCount.value = allPokemon.length;
+    localStorage.setItem(storageKey, JSON.stringify(allPokemon));
+  }
+
+  applySearch('');
+});
 </script>
 
 <template>
-  <header ref="topBar" class="mdc-top-app-bar mdc-top-app-bar--fixed">
-    <div class="mdc-top-app-bar__row">
+  <TopBar @search="updateSearchResults" @clear="updateSearchResults('')" />
+  <PaginationButtons :current-page="currentPage" :page-count="pageCount" @previous="updatePagination('previous')"
+    @next="updatePagination('next')" />
 
-      <!-- LEFT SIDE -->
-      <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
-
-        <button v-if="!searchMode" class="material-icons mdc-icon-button">
-          menu
-        </button>
-
-        <button v-if="searchMode" class="material-icons mdc-icon-button" @click="closeSearch">
-          arrow_back
-        </button>
-
-        <span v-if="!searchMode" class="mdc-top-app-bar__title">
-          PokeApp
-        </span>
-
-        <form v-if="searchMode" class="search-form" style="display:flex; align-items: center; justify-content: center;"
-          @submit.prevent="submitSearch">
-          <input ref="searchInput" v-model="searchQuery" class="search-input" type="text"
-            placeholder="Search Pokémon..." />
-          <button v-if="searchQuery" class="material-icons mdc-icon-button" @click="clearSearch">
-            close
-          </button>
-        </form>
-
-      </section>
-
-      <!-- RIGHT SIDE -->
-      <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end">
-
-        <button v-if="!searchMode" class="material-icons mdc-icon-button" @click="openSearch">
-          search
-        </button>
-
-        <button v-if="!searchMode" class="material-icons mdc-icon-button">
-          more_vert
-        </button>
-
-      </section>
-
-    </div>
-  </header>
+  <Sheet ref="sheetRef" />
 
   <main class="mdc-top-app-bar--fixed-adjust">
-    <ul class="mdc-image-list my-image-list">
-      <li class="mdc-image-list__item" style v-for="n in 10" :key="n">
-        <div class="mdc-image-list__image-aspect-container">
-          <img class="mdc-image-list__image" src="https://static.wikia.nocookie.net/pokemon/images/4/4a/0025Pikachu.png/revision/latest/scale-to-width-down/1000?cb=20260203145744">
-        </div>
-        <div class="mdc-image-list__supporting">
-          <span class="mdc-image-list__label">Pokemon name</span>
-        </div>
-      </li>
-    </ul>
+    <PokemonList :pokemon="pokemonPaginated" @view="handleViewPokemon" />
   </main>
 </template>
 
-<style scoped>
-.mdc-image-list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-
-  padding: 10px;
-  list-style: none;
-  margin: 0;
-}
-
-.mdc-image-list__item {
-  border-radius: 12px;
+<style>
+.no-scroll {
   overflow: hidden;
-  background: white;
-}
-
-.search-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.search-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-
-  margin-top: 8px;
-  background: white;
-
-  border-radius: 8px;
-  padding: 8px;
-
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
-
-  width: 220px;
-  z-index: 1000;
-}
-
-.search-input {
-  width: 100%;
-  border: none;
-  outline: none;
-  padding: 8px;
-  font-size: 14px;
+  height: 100vh;
 }
 </style>
