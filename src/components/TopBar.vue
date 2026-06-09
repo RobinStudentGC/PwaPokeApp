@@ -42,17 +42,13 @@ function clearSearch() {
 
             <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
 
-                <button v-if="!searchMode" class="material-icons mdc-icon-button">
-                    menu
-                </button>
-
                 <button v-if="searchMode" class="material-icons mdc-icon-button" @click="closeSearch">
                     arrow_back
                 </button>
 
-                <span v-if="!searchMode" class="mdc-top-app-bar__title">
+                <RouterLink v-if="!searchMode" class="mdc-top-app-bar__title" to="/">
                     PokeApp
-                </span>
+                </RouterLink>
 
                 <form v-if="searchMode" class="search-form" style="display:flex; align-items:center;" @submit.prevent>
                     <input ref="searchInput" v-model="searchQuery" class="search-input" type="text"
@@ -72,9 +68,9 @@ function clearSearch() {
                     search
                 </button>
 
-                <button v-if="!searchMode" class="material-icons mdc-icon-button">
-                    more_vert
-                </button>
+                <RouterLink  v-if="!searchMode" class="material-icons mdc-icon-button" to="/favorites">
+                    favorite_border
+                </RouterLink>
 
             </section>
 
@@ -89,5 +85,9 @@ function clearSearch() {
     outline: none;
     padding: 8px;
     font-size: 14px;
+}
+
+.mdc-top-app-bar__title {
+    color: white;
 }
 </style>

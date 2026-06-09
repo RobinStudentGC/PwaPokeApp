@@ -1,12 +1,10 @@
 <script setup>
 defineProps({
-    pokemon: {
-        type: Array,
-        required: true
-    }
+    pokemon: { type: Array, required: true },
+    favorited: { type: Object, required: true }  // Set
 });
 
-const emits = defineEmits(['view']);
+const emits = defineEmits(['view', 'favorite']);
 
 function getPokemonId(url) {
     return url.split('/').filter(Boolean).pop();
@@ -15,13 +13,16 @@ function getPokemonId(url) {
 function padId(id) {
     return '#' + String(id).padStart(3, '0');
 }
-</script>
 
+</script>
 <template>
     <ul class="pokemon-grid">
         <li v-for="item in pokemon" :key="item.name" class="pokemon-card"
             @click="$emit('view', getPokemonId(item.url))">
             <div class="card-img-wrap">
+                <span class="material-icons fav-icon" :class="{ 'favorited': favorited.has(getPokemonId(item.url)) }" @click.stop="$emit('favorite', getPokemonId(item.url)) ">
+                    {{ favorited.has(getPokemonId(item.url)) ? 'favorite' : 'favorite_border' }}
+                </span>
                 <img class="card-img"
                     :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${getPokemonId(item.url)}.png`"
                     :alt="item.name"
@@ -43,6 +44,19 @@ function padId(id) {
     padding: 16px;
     list-style: none;
     margin: 0;
+    margin-bottom: 64px;
+}
+
+.favorited {
+    color: red;
+}
+
+.fav-icon {
+    position: absolute;
+    z-index: 2;
+    top: 8px;
+    right: 8px;
+    font-size: 30px;
 }
 
 .pokemon-card {

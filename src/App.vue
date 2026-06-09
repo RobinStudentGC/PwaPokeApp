@@ -1,55 +1,32 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { fetchPokemon, fetchPokemonDetails } from './data/pokemon';
 import TopBar from './components/TopBar.vue';
-import PokemonList from './components/PokemonList.vue';
-import PaginationButtons from './components/PaginationButtons.vue';
 import Sheet from './components/Sheet.vue';
 
-const pokemonPaginated = ref([]);
-const fetchLimit = 1350;
-const paginationLimit = 40;
-
-const currentPage = ref(1);
-const pokemonCount = ref(0);
-const filteredPokemon = ref([]);
+const homeViewRef = ref(null);
 const sheetRef = ref(null);
+const favoritedPokemon = ref(new Set());
+const allPokemon = ref([]);
+const fetchLimit = 1350;
 
-const pageCount = computed(() =>
-  Math.ceil(filteredPokemon.value.length / paginationLimit)
-);
+onMounted(async () => {
+  const storageKey = 'pokemon-list';
+  const storageKeyFavorites = 'pokemon-favorites';
+  const cached = localStorage.getItem(storageKey);
+  const cachedFavorites = localStorage.getItem(storageKeyFavorites);
 
-let allPokemon = [];
-
-function applySearch(query) {
-  currentPage.value = 1;
-  if (!query) {
-    filteredPokemon.value = allPokemon;
+  if (cached) {
+    allPokemon.value = JSON.parse(cached);
   } else {
-    const q = query.toLowerCase();
-    filteredPokemon.value = allPokemon.filter((p) =>
-      p.name.toLowerCase().includes(q)
-    );
+    allPokemon.value = await fetchPokemon(fetchLimit);
+    localStorage.setItem(storageKey, JSON.stringify(allPokemon.value));
   }
-  pokemonPaginated.value = filteredPokemon.value.slice(0, paginationLimit);
-}
 
-let timer = null;
-
-function updateSearchResults(query) {
-  clearTimeout(timer);
-  timer = setTimeout(() => applySearch(query), 200);
-}
-
-function updatePagination(direction) {
-  if (direction === 'previous' && currentPage.value > 1) {
-    currentPage.value--;
-  } else if (direction === 'next' && currentPage.value < pageCount.value) {
-    currentPage.value++;
+  if (cachedFavorites) {
+    favoritedPokemon.value = new Set(JSON.parse(cachedFavorites));
   }
-  const start = (currentPage.value - 1) * paginationLimit;
-  pokemonPaginated.value = filteredPokemon.value.slice(start, start + paginationLimit);
-}
+});
 
 async function handleViewPokemon(pokemonId) {
   let title = `Pokémon #${pokemonId}`;
@@ -62,40 +39,27 @@ async function handleViewPokemon(pokemonId) {
   } catch (error) {
     console.error('Error fetching Pokémon details:', error);
   }
-
-  sheetRef.value.openSheet({
-    pokemonId: pokemonId,
-    pokemonDetail: details,
-    title: title
-  });
+  sheetRef.value.openSheet({ pokemonId, pokemonDetail: details, title });
 }
 
-onMounted(async () => {
-  const storageKey = 'pokemon-list';
-  const cached = localStorage.getItem(storageKey);
+function handleFavoritePokemon(pokemonId) {
+  const next = new Set(favoritedPokemon.value);
+  next.has(pokemonId) ? next.delete(pokemonId) : next.add(pokemonId);
+  favoritedPokemon.value = next;
+  localStorage.setItem('pokemon-favorites', JSON.stringify(Array.from(next)));
+}
 
-  if (cached) {
-    allPokemon = JSON.parse(cached);
-    pokemonCount.value = allPokemon.length;
-  } else {
-    allPokemon = await fetchPokemon(fetchLimit);
-    pokemonCount.value = allPokemon.length;
-    localStorage.setItem(storageKey, JSON.stringify(allPokemon));
-  }
-
-  applySearch('');
-});
+function handleSearch(query) {
+  homeViewRef.value?.updateSearchResults(query);
+}
 </script>
 
 <template>
-  <TopBar @search="updateSearchResults" @clear="updateSearchResults('')" />
-  <PaginationButtons :current-page="currentPage" :page-count="pageCount" @previous="updatePagination('previous')"
-    @next="updatePagination('next')" />
-
+  <TopBar @search="handleSearch" @clear="handleSearch('')" />
   <Sheet ref="sheetRef" />
-
   <main class="mdc-top-app-bar--fixed-adjust">
-    <PokemonList :pokemon="pokemonPaginated" @view="handleViewPokemon" />
+    <RouterView ref="homeViewRef" :all-pokemon="allPokemon" :favorited-pokemon="favoritedPokemon"
+      @view="handleViewPokemon" @favorite="handleFavoritePokemon" />
   </main>
 </template>
 
