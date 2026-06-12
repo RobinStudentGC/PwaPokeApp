@@ -1,30 +1,35 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import PokemonList from '../components/PokemonList.vue';
 import PaginationButtons from '../components/PaginationButtons.vue';
 
-const props = defineProps(['allPokemon', 'favoritedPokemon']);
+const props = defineProps(['allPokemon', 'favoritedPokemon', 'searchQuery']);
 const emit = defineEmits(['view', 'favorite']);
 
-const paginationLimit = 40;
+const PAGINATION_LIMIT = 40;
 const currentPage = ref(1);
 
-function generateId(url) {
+function getIdFromUrl(url) {
     const parts = url.split('/').filter(Boolean);
     return Number(parts[parts.length - 1]);
 }
 
-const favoritedList = computed(() =>
-    props.allPokemon.filter((p) => props.favoritedPokemon.includes(generateId(p.url)))
-);
+const favoritedList = computed(() => {
+    const query = props.searchQuery?.toLowerCase();
+    return props.allPokemon.filter((pokemon) => {
+        const isFavorited = props.favoritedPokemon.includes(getIdFromUrl(pokemon.url));
+        const matchesSearch = !query || pokemon.name.toLowerCase().includes(query);
+        return isFavorited && matchesSearch;
+    });
+});
 
 const pageCount = computed(() =>
-    Math.ceil(favoritedList.value.length / paginationLimit)
+    Math.ceil(favoritedList.value.length / PAGINATION_LIMIT)
 );
 
 const pokemonPaginated = computed(() => {
-    const start = (currentPage.value - 1) * paginationLimit;
-    return favoritedList.value.slice(start, start + paginationLimit);
+    const start = (currentPage.value - 1) * PAGINATION_LIMIT;
+    return favoritedList.value.slice(start, start + PAGINATION_LIMIT);
 });
 
 function updatePagination(direction) {
@@ -32,17 +37,29 @@ function updatePagination(direction) {
     else if (direction === 'next' && currentPage.value < pageCount.value) currentPage.value++;
 }
 
-watch(pageCount, (val) => {
-    if (currentPage.value > val) currentPage.value = 1;
-});
+function changePage(pageInput) {
+    currentPage.value = Math.min(Math.max(Number(pageInput), 1), pageCount.value);
+}
+
+watch([() => props.searchQuery, pageCount], () => { currentPage.value = 1; });
 </script>
 
 <template>
-    <PaginationButtons :current-page="currentPage" :page-count="pageCount" @previous="updatePagination('previous')"
-        @next="updatePagination('next')" />
+    <PaginationButtons
+        :current-page="currentPage"
+        :page-count="pageCount"
+        @previous="updatePagination('previous')"
+        @next="updatePagination('next')"
+        @change="changePage"
+    />
     <div v-if="favoritedList.length === 0" style="padding: 24px; text-align: center;">
-        No favorites yet!
+        {{ props.searchQuery ? 'No favorites match your search.' : 'No favorites yet!' }}
     </div>
-    <PokemonList v-else :pokemon="pokemonPaginated" :favorited="favoritedPokemon" @view="$emit('view', $event)"
-        @favorite="$emit('favorite', $event)" />
+    <PokemonList
+        v-else
+        :pokemon="pokemonPaginated"
+        :favorited="favoritedPokemon"
+        @view="$emit('view', $event)"
+        @favorite="$emit('favorite', $event)"
+    />
 </template>

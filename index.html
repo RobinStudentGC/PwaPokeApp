@@ -1,10 +1,20 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="">
   <head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vite App</title>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="msapplication-TileColor" content="#3B4CCA" />
+    <meta name="description" content="A simple Pokemon app" />
+    <meta name="theme-color" content="#3B4CCA" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/icon512_rounded.png"
+    />
+    <link rel="manifest" href="/manifest.json" />
+    <title>PokeApp</title>
     <link
       rel="stylesheet"
       href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css"
@@ -14,15 +24,28 @@
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
     />
 
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", async () => {
+          try {
+            await navigator.serviceWorker.register("/service-worker.js");
+            console.log("Service Worker registered");
+          } catch (error) {
+            console.error("Service Worker registration failed:", error);
+          }
+        });
+      }
+    </script>
+
     <style>
       body {
         margin: 0;
-        font-family: 'Roboto', sans-serif;
+        font-family: "Roboto", sans-serif;
       }
 
       :root {
-        --mdc-theme-primary: #3B4CCA;
-        --mdc-theme-secondary: #2A75BB;
+        --mdc-theme-primary: #3b4cca;
+        --mdc-theme-secondary: #2a75bb;
         --mdc-theme-background: #f5f5f5;
       }
     </style>

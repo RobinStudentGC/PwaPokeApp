@@ -4,24 +4,23 @@ import { fetchPokemon, fetchPokemonDetails } from './data/pokemon';
 import TopBar from './components/TopBar.vue';
 import Sheet from './components/Sheet.vue';
 
-const homeViewRef = ref(null);
 const sheetRef = ref(null);
 const favoritedPokemon = ref([]);
 const allPokemon = ref([]);
-const fetchLimit = 1350;
+const searchQuery = ref('');
+
+const FETCH_LIMIT = 1350;
 
 onMounted(async () => {
-  const storageKey = 'pokemon-list';
-  const storageKeyFavorites = 'pokemon-favorites';
-  const cached = localStorage.getItem(storageKey);
-  const cachedFavorites = localStorage.getItem(storageKeyFavorites);
+  const cached = localStorage.getItem('pokemon-list');
+  const cachedFavorites = localStorage.getItem('pokemon-favorites');
 
-  if (cached) {
-    allPokemon.value = JSON.parse(cached);
-  } else {
-    allPokemon.value = await fetchPokemon(fetchLimit);
-    localStorage.setItem(storageKey, JSON.stringify(allPokemon.value));
-  }
+  allPokemon.value = cached
+    ? JSON.parse(cached)
+    : await fetchPokemon(FETCH_LIMIT).then((data) => {
+      localStorage.setItem('pokemon-list', JSON.stringify(data));
+      return data;
+    });
 
   if (cachedFavorites) {
     favoritedPokemon.value = JSON.parse(cachedFavorites);
@@ -43,27 +42,22 @@ async function handleViewPokemon(pokemonId) {
 }
 
 function handleFavoritePokemon(pokemonId) {
-  const favPokemonCopy = [...favoritedPokemon.value];
-  const clickedPokemon = favPokemonCopy.indexOf(Number(pokemonId));
-  if (clickedPokemon > -1) {
-    favPokemonCopy.splice(clickedPokemon, 1);
+  const id = Number(pokemonId);
+  const index = favoritedPokemon.value.indexOf(id);
+  if (index > -1) {
+    favoritedPokemon.value.splice(index, 1);
   } else {
-    favPokemonCopy.push(Number(pokemonId));
+    favoritedPokemon.value.push(id);
   }
-  favoritedPokemon.value = favPokemonCopy;
-  localStorage.setItem('pokemon-favorites', JSON.stringify(favPokemonCopy));
-}
-
-function handleSearch(query) {
-  homeViewRef.value?.updateSearchResults(query);
+  localStorage.setItem('pokemon-favorites', JSON.stringify(favoritedPokemon.value));
 }
 </script>
 
 <template>
-  <TopBar @search="handleSearch" @clear="handleSearch('')" />
+  <TopBar :search-query="searchQuery" @search="searchQuery = $event" @clear="searchQuery = ''" />
   <Sheet ref="sheetRef" />
   <main class="mdc-top-app-bar--fixed-adjust">
-    <RouterView ref="homeViewRef" :all-pokemon="allPokemon" :favorited-pokemon="favoritedPokemon"
+    <RouterView :all-pokemon="allPokemon" :favorited-pokemon="favoritedPokemon" :search-query="searchQuery"
       @view="handleViewPokemon" @favorite="handleFavoritePokemon" />
   </main>
 </template>
