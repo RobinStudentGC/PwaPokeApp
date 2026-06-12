@@ -16,21 +16,17 @@ const emits = defineEmits([
 
 <template>
     <div class="buttons">
-        <!-- <div class="mdc-touch-target-wrapper"> -->
         <button class="mdc-button mdc-button--raised mdc-button--leading" @click="emits('previous')">
             <span class="mdc-button__ripple"></span>
             <i class="material-icons" aria-hidden="true">arrow_back</i>
         </button>
-        <!-- </div> -->
          <div style="margin: 0 16px;">
              {{ currentPage }} / {{ pageCount }}
          </div>
-        <!-- <div class="mdc-touch-target-wrapper"> -->
         <button class="mdc-button mdc-button--raised mdc-button--leading" @click="emits('next')">
             <span class="mdc-button__ripple"></span>
             <i class="material-icons" aria-hidden="true">arrow_forward</i>
         </button>
-        <!-- </div> -->
     </div>
 </template>
 

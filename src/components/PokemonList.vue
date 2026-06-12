@@ -20,8 +20,8 @@ function padId(id) {
         <li v-for="item in pokemon" :key="item.name" class="pokemon-card"
             @click="$emit('view', getPokemonId(item.url))">
             <div class="card-img-wrap">
-                <span class="material-icons fav-icon" :class="{ 'favorited': favorited.has(getPokemonId(item.url)) }" @click.stop="$emit('favorite', getPokemonId(item.url)) ">
-                    {{ favorited.has(getPokemonId(item.url)) ? 'favorite' : 'favorite_border' }}
+                <span class="material-icons fav-icon" :class="{ 'favorited': favorited.includes(Number(getPokemonId(item.url))) }" @click.stop="$emit('favorite', getPokemonId(item.url)) ">
+                    {{ favorited.includes(Number(getPokemonId(item.url))) ? 'favorite' : 'favorite_border' }}
                 </span>
                 <img class="card-img"
                     :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${getPokemonId(item.url)}.png`"

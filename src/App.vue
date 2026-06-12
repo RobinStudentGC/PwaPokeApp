@@ -6,7 +6,7 @@ import Sheet from './components/Sheet.vue';
 
 const homeViewRef = ref(null);
 const sheetRef = ref(null);
-const favoritedPokemon = ref(new Set());
+const favoritedPokemon = ref([]);
 const allPokemon = ref([]);
 const fetchLimit = 1350;
 
@@ -24,7 +24,7 @@ onMounted(async () => {
   }
 
   if (cachedFavorites) {
-    favoritedPokemon.value = new Set(JSON.parse(cachedFavorites));
+    favoritedPokemon.value = JSON.parse(cachedFavorites);
   }
 });
 
@@ -43,10 +43,15 @@ async function handleViewPokemon(pokemonId) {
 }
 
 function handleFavoritePokemon(pokemonId) {
-  const next = new Set(favoritedPokemon.value);
-  next.has(pokemonId) ? next.delete(pokemonId) : next.add(pokemonId);
-  favoritedPokemon.value = next;
-  localStorage.setItem('pokemon-favorites', JSON.stringify(Array.from(next)));
+  const favPokemonCopy = [...favoritedPokemon.value];
+  const clickedPokemon = favPokemonCopy.indexOf(Number(pokemonId));
+  if (clickedPokemon > -1) {
+    favPokemonCopy.splice(clickedPokemon, 1);
+  } else {
+    favPokemonCopy.push(Number(pokemonId));
+  }
+  favoritedPokemon.value = favPokemonCopy;
+  localStorage.setItem('pokemon-favorites', JSON.stringify(favPokemonCopy));
 }
 
 function handleSearch(query) {

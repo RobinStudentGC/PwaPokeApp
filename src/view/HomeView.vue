@@ -44,7 +44,6 @@ function updatePagination(direction) {
     pokemonPaginated.value = filteredPokemon.value.slice(start, start + paginationLimit);
 }
 
-// Re-run search when allPokemon is populated from parent
 watch(() => props.allPokemon, (val) => {
     if (val?.length) applySearch('');
 }, { immediate: true });
