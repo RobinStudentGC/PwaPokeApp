@@ -5,13 +5,13 @@
         {
             "purpose": "maskable",
             "sizes": "512x512",
-            "src": "icon512_maskable.ico",
+            "src": "icon512_maskable.png",
             "type": "image/png"
         },
         {
             "purpose": "any",
             "sizes": "512x512",
-            "src": "icon512_rounded.ico",
+            "src": "icon512_rounded.png",
             "type": "image/png"
         }
     ],
