@@ -20,5 +20,7 @@
     "dir": "auto",
     "lang": "en-US",
     "name": "PokeApp",
-    "short_name": "pokeapp"
+    "short_name": "pokeapp",
+    "start_url": "/PwaPokeApp/",
+    "scope": "/PwaPokeApp/"
 }
