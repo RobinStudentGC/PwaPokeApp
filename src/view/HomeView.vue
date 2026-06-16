@@ -35,7 +35,7 @@ function changePage(pageInput) {
     currentPage.value = Math.min(Math.max(Number(pageInput), 1), pageCount.value);
 }
 
-// Reset to page 1 whenever the search or total pages change
+// Reset naar de eerste pagina als de zoekopdracht verandert of als het aantal pagina's verandert.
 watch([() => props.searchQuery, pageCount], () => { currentPage.value = 1; });
 </script>
 
