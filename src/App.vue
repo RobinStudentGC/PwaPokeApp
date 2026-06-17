@@ -9,6 +9,7 @@ const searchQuery = ref('')
 
 const searchInput = ref(null)
 
+
 function updateSearchResults(query) {
   console.log('Live search:', query)
 
@@ -118,6 +119,7 @@ onMounted(() => {
 }
 
 .mdc-image-list__item {
+  margin: 5px;
   border-radius: 12px;
   overflow: hidden;
   background: white;
