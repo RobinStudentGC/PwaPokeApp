@@ -1,38 +1,24 @@
 <script setup>
+import PokemonCard from './PokemonCard.vue';
+
 defineProps({
     pokemon: { type: Array, required: true },
-    favorited: { type: Object, required: true }  // Set
+    favorited: { type: Object, required: true }
 });
 
-const emits = defineEmits(['view', 'favorite']);
-
-function getPokemonId(url) {
-    return url.split('/').filter(Boolean).pop();
-}
-
-function padId(id) {
-    return '#' + String(id).padStart(3, '0');
-}
-
+defineEmits(['view', 'favorite']);
 </script>
+
 <template>
     <ul class="pokemon-grid">
-        <li v-for="item in pokemon" :key="item.name" class="pokemon-card"
-            @click="$emit('view', getPokemonId(item.url))">
-            <div class="card-img-wrap">
-                <span class="material-icons fav-icon" :class="{ 'favorited': favorited.includes(Number(getPokemonId(item.url))) }" @click.stop="$emit('favorite', getPokemonId(item.url)) ">
-                    {{ favorited.includes(Number(getPokemonId(item.url))) ? 'favorite' : 'favorite_border' }}
-                </span>
-                <img class="card-img"
-                    :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${getPokemonId(item.url)}.png`"
-                    :alt="item.name"
-                    @error="e => { if (!e.target.dataset.fallback) { e.target.dataset.fallback = '1'; e.target.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${getPokemonId(item.url)}.png` } }">
-            </div>
-            <div class="card-body">
-                <p class="card-num">{{ padId(getPokemonId(item.url)) }}</p>
-                <p class="card-name">{{ item.name }}</p>
-            </div>
-        </li>
+        <PokemonCard
+            v-for="item in pokemon"
+            :key="item.name"
+            :item="item"
+            :favorited="favorited"
+            @view="$emit('view', $event)"
+            @favorite="$emit('favorite', $event)"
+        />
     </ul>
 </template>
 
@@ -45,85 +31,5 @@ function padId(id) {
     list-style: none;
     margin: 0;
     margin-bottom: 64px;
-}
-
-.favorited {
-    color: red;
-}
-
-.fav-icon {
-    position: absolute;
-    z-index: 2;
-    top: 8px;
-    right: 8px;
-    font-size: 30px;
-}
-
-.pokemon-card {
-    border-radius: 12px;
-    border: 0.5px solid rgba(0, 0, 0, 0.1);
-    background: #fff;
-    overflow: hidden;
-    transition: transform 0.18s ease;
-    cursor: pointer;
-}
-
-.pokemon-card:hover {
-    transform: translateY(-4px);
-}
-
-.card-img-wrap {
-    background: #f4f4f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px 12px 8px;
-    position: relative;
-    overflow: hidden;
-}
-
-.card-img-wrap::before {
-    content: '';
-    position: absolute;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.06);
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-.card-img {
-    width: 72px;
-    height: 72px;
-    object-fit: contain;
-    image-rendering: pixelated;
-    position: relative;
-    z-index: 1;
-    transition: transform 0.2s ease;
-}
-
-.pokemon-card:hover .card-img {
-    transform: scale(1.1) translateY(-3px);
-}
-
-.card-body {
-    padding: 10px 12px 12px;
-    border-top: 0.5px solid rgba(0, 0, 0, 0.08);
-}
-
-.card-num {
-    font-size: 11px;
-    color: #999;
-    margin: 0 0 2px;
-}
-
-.card-name {
-    font-size: 14px;
-    font-weight: 500;
-    color: #1a1a1a;
-    text-transform: capitalize;
-    margin: 0;
 }
 </style>

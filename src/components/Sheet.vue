@@ -3,124 +3,107 @@ import { ref, watch, computed } from 'vue'
 
 const isOpen = ref(false)
 
-const imageUrl = ref('')
-const title = ref('')
-const pokemonId = ref(null)
-const pokemonDetail = ref(null)
-
-const typeColors = {
-  fire: { bg: '#FAECE7', text: '#993C1D' },
-  water: { bg: '#E6F1FB', text: '#185FA5' },
-  grass: { bg: '#EAF3DE', text: '#3B6D11' },
-  poison: { bg: '#FBEAF0', text: '#993556' },
-  electric: { bg: '#FAEEDA', text: '#854F0B' },
-  psychic: { bg: '#FBEAF0', text: '#72243E' },
-  ice: { bg: '#E6F1FB', text: '#0C447C' },
-  dragon: { bg: '#EEEDFE', text: '#3C3489' },
-  dark: { bg: '#D3D1C7', text: '#2C2C2A' },
-  fairy: { bg: '#FBEAF0', text: '#D4537E' },
-  fighting: { bg: '#FAECE7', text: '#712B13' },
-  flying: { bg: '#E6F1FB', text: '#378ADD' },
-  ground: { bg: '#FAEEDA', text: '#633806' },
-  rock: { bg: '#D3D1C7', text: '#5F5E5A' },
-  bug: { bg: '#EAF3DE', text: '#639922' },
-  ghost: { bg: '#EEEDFE', text: '#534AB7' },
-  steel: { bg: '#D3D1C7', text: '#444441' },
-  normal: { bg: '#F1EFE8', text: '#5F5E5A' },
-}
-
-function getTypeStyle(typeName) {
-  const colors = typeColors[typeName] || { bg: '#F1EFE8', text: '#5F5E5A' }
-  return `background:${colors.bg}; color:${colors.text};`
-}
-
-const maxStatValues = {
-  hp: 255,
-  attack: 190,
-  defense: 250,
-  'special-attack': 194,
-  'special-defense': 250,
-  speed: 200
-}
-
-const statLabels = {
-  hp: 'HP',
-  attack: 'Atk',
-  defense: 'Def',
-  'special-attack': 'Sp.Atk',
-  'special-defense': 'Sp.Def',
-  speed: 'Spd'
-}
-
-function getStatPercentage(statName, value) {
-  const max = maxStatValues[statName] || 255
-  return Math.round((value / max) * 100)
-}
-
-function getStatColor(value) {
-  if (value >= 100) return '#1D9E75'
-  if (value >= 60) return '#EF9F27'
-  return '#D85A30'
-}
-
-const types = computed(() =>
-  pokemonDetail.value?.types?.map(t => t.type.name) || []
-)
-
-const stats = computed(() =>
-  pokemonDetail.value?.stats || []
-)
-
-const totalBaseStats = computed(() =>
-  stats.value.reduce((sum, stat) => sum + stat.base_stat, 0)
-)
-
-const heightText = computed(() => {
-  const heightDm = pokemonDetail.value?.height
-  return heightDm != null
-    ? (heightDm / 10).toFixed(1) + ' m'
-    : '—'
-})
-
-const weightText = computed(() => {
-  const weightHg = pokemonDetail.value?.weight
-  return weightHg != null
-    ? (weightHg / 10).toFixed(1) + ' kg'
-    : '—'
-})
-
-const abilitiesText = computed(() =>
-  pokemonDetail.value?.abilities?.map(a => a.ability.name).join(', ') || '—'
-)
-
-function openSheet({ pokemonDetail: detail, title: t, pokemonId: id } = {}) {
-  pokemonDetail.value = detail || null
-  pokemonId.value = id || null
-  title.value = t || `Pokémon #${id}`
-
-  imageUrl.value = id
-    ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`
-    : ''
-
-  isOpen.value = true
-}
-
+// Zorgt ervoor dat scrollen niet meer kan als de sheet open is.
 watch(isOpen, (open) => {
   document.body.classList.toggle('no-scroll', open)
 })
 
+// --- Data shown in the sheet ---
+const pokemon = ref(null)   // the full pokemon detail object from the API
+const pokemonId = ref(null)
+
+// --- Open / close ---
+// defineExpose lets a parent component call these methods via a template ref:
+// e.g. <PokemonSheet ref="sheet" /> then sheet.value.openSheet(...)
+function openSheet({ detail, id }) {
+  pokemon.value = detail
+  pokemonId.value = id
+  isOpen.value = true
+}
+
 function closeSheet() {
   isOpen.value = false
-
+  // Wait for the slide-out animation to finish before clearing data
   setTimeout(() => {
-    imageUrl.value = ''
-    title.value = ''
+    pokemon.value = null
     pokemonId.value = null
-    pokemonDetail.value = null
   }, 300)
 }
 
 defineExpose({ openSheet, closeSheet })
+
+// --- Derived data from the pokemon object ---
+const types = computed(() => pokemon.value?.types?.map(t => t.type.name) || [])
+const stats = computed(() => pokemon.value?.stats || [])
+const totalStats = computed(() => stats.value.reduce((sum, s) => sum + s.base_stat, 0))
+
+const height = computed(() => {
+  // API gives height in decimetres, convert to metres
+  return pokemon.value?.height != null
+    ? (pokemon.value.height / 10).toFixed(1) + ' m'
+    : '—'
+})
+
+const weight = computed(() => {
+  // API gives weight in hectograms, convert to kilograms
+  return pokemon.value?.weight != null
+    ? (pokemon.value.weight / 10).toFixed(1) + ' kg'
+    : '—'
+})
+
+const abilities = computed(() =>
+  pokemon.value?.abilities?.map(a => a.ability.name).join(', ') || '—'
+)
+
+const imageUrl = computed(() =>
+  pokemonId.value
+    ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId.value}.png`
+    : ''
+)
+
+const name = computed(() => pokemon.value?.name || `Pokémon #${pokemonId.value}`)
+
+// --- Stat bar helpers ---
+// Volgens AI zijn dit de maximum stats die een pokemon kan hebben.
+// Dit wordt dan gebruikt om de lengte van de stat bars te bepalen als percentage van het maximum.
+const statMax = { hp: 255, attack: 190, defense: 250, 'special-attack': 194, 'special-defense': 250, speed: 200 }
+const statLabel = { hp: 'HP', attack: 'Atk', defense: 'Def', 'special-attack': 'Sp.Atk', 'special-defense': 'Sp.Def', speed: 'Spd' }
+
+function statPercent(name, value) {
+  return Math.round((value / (statMax[name] || 255)) * 100)
+}
+
+function statColor(value) {
+  if (value >= 100) return '#1D9E75' // goede stats
+  if (value >= 60)  return '#EF9F27' // gemiddelde stats
+  return '#D85A30'                   // lage stats
+}
+
+const typeColors = {
+  fire:     { bg: '#FAECE7', text: '#993C1D' },
+  water:    { bg: '#E6F1FB', text: '#185FA5' },
+  grass:    { bg: '#EAF3DE', text: '#3B6D11' },
+  poison:   { bg: '#FBEAF0', text: '#993556' },
+  electric: { bg: '#FAEEDA', text: '#854F0B' },
+  psychic:  { bg: '#FBEAF0', text: '#72243E' },
+  ice:      { bg: '#E6F1FB', text: '#0C447C' },
+  dragon:   { bg: '#EEEDFE', text: '#3C3489' },
+  dark:     { bg: '#D3D1C7', text: '#2C2C2A' },
+  fairy:    { bg: '#FBEAF0', text: '#D4537E' },
+  fighting: { bg: '#FAECE7', text: '#712B13' },
+  flying:   { bg: '#E6F1FB', text: '#378ADD' },
+  ground:   { bg: '#FAEEDA', text: '#633806' },
+  rock:     { bg: '#D3D1C7', text: '#5F5E5A' },
+  bug:      { bg: '#EAF3DE', text: '#639922' },
+  ghost:    { bg: '#EEEDFE', text: '#534AB7' },
+  steel:    { bg: '#D3D1C7', text: '#444441' },
+  normal:   { bg: '#F1EFE8', text: '#5F5E5A' },
+}
+
+function typeStyle(typeName) {
+  const c = typeColors[typeName] || { bg: '#F1EFE8', text: '#5F5E5A' }
+  return `background:${c.bg}; color:${c.text};`
+}
 </script>
 
 <template>
@@ -128,7 +111,6 @@ defineExpose({ openSheet, closeSheet })
 
     <header class="sheet-header">
       <button class="close-btn" @click="closeSheet" aria-label="Close">✕</button>
-
       <span class="pokemon-num" v-if="pokemonId">
         #{{ String(pokemonId).padStart(3, '0') }}
       </span>
@@ -137,15 +119,15 @@ defineExpose({ openSheet, closeSheet })
     <div class="sheet-body">
 
       <div class="artwork-wrap">
-        <img :src="imageUrl" :alt="title" class="artwork" />
+        <img :src="imageUrl" :alt="name" class="artwork" />
       </div>
 
       <div class="info-panel">
 
-        <h1 class="pokemon-name">{{ title }}</h1>
+        <h1 class="pokemon-name">{{ name }}</h1>
 
         <div class="types" v-if="types.length">
-          <span v-for="type in types" :key="type" class="type-badge" :style="getTypeStyle(type)">
+          <span v-for="type in types" :key="type" class="type-badge" :style="typeStyle(type)">
             {{ type }}
           </span>
         </div>
@@ -153,43 +135,34 @@ defineExpose({ openSheet, closeSheet })
         <div class="metrics">
           <div class="metric">
             <span class="metric-label">Height</span>
-            <span class="metric-value">{{ heightText }}</span>
+            <span class="metric-value">{{ height }}</span>
           </div>
-
           <div class="metric">
             <span class="metric-label">Weight</span>
-            <span class="metric-value">{{ weightText }}</span>
+            <span class="metric-value">{{ weight }}</span>
           </div>
-
           <div class="metric wide">
             <span class="metric-label">Abilities</span>
-            <span class="metric-value capitalize">{{ abilitiesText }}</span>
+            <span class="metric-value capitalize">{{ abilities }}</span>
           </div>
         </div>
 
         <div class="stats-section">
-
           <div class="stats-header">
             <span class="section-title">Base stats</span>
-            <span class="total-badge">{{ totalBaseStats }} total</span>
+            <span class="total-badge">{{ totalStats }} total</span>
           </div>
 
           <div v-for="stat in stats" :key="stat.stat.name" class="stat-row">
-            <span class="stat-name">
-              {{ statLabels[stat.stat.name] || stat.stat.name }}
-            </span>
-
-            <span class="stat-val">
-              {{ stat.base_stat }}
-            </span>
-
+            <span class="stat-name">{{ statLabel[stat.stat.name] || stat.stat.name }}</span>
+            <span class="stat-val">{{ stat.base_stat }}</span>
             <div class="stat-bar-bg">
               <div class="stat-bar-fill"
-                :style="`width:${getStatPercentage(stat.stat.name, stat.base_stat)}%; background:${getStatColor(stat.base_stat)}`" />
+                :style="`width:${statPercent(stat.stat.name, stat.base_stat)}%; background:${statColor(stat.base_stat)}`" />
             </div>
           </div>
-
         </div>
+
       </div>
     </div>
 
