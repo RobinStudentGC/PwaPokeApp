@@ -18,11 +18,10 @@ function onPageInput(event) {
 <template>
   <div class="pagination">
     <button
-      class="mdc-button mdc-button--raised"
+      class="pagination__button"
       :disabled="props.currentPage <= 1"
       @click="emit('previous')"
     >
-      <span class="mdc-button__ripple"></span>
       <i class="material-icons" aria-hidden="true">arrow_back</i>
     </button>
 
@@ -40,11 +39,10 @@ function onPageInput(event) {
     </div>
 
     <button
-      class="mdc-button mdc-button--raised"
+      class="pagination__button"
       :disabled="props.currentPage >= props.pageCount"
       @click="emit('next')"
     >
-      <span class="mdc-button__ripple"></span>
       <i class="material-icons" aria-hidden="true">arrow_forward</i>
     </button>
   </div>
@@ -54,16 +52,42 @@ function onPageInput(event) {
 .pagination {
   position: fixed;
   bottom: 0;
-  width: 100%;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
   z-index: 20;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 8px;
+  padding: 8px 16px;
   background-color: var(--mdc-theme-surface);
   border-top: 1px solid rgba(0, 0, 0, 0.12);
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.pagination__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 36px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 10%;
+  background-color: var(--mdc-theme-primary, #6200ee);
+  color: #fff;
+  cursor: pointer;
+}
+
+.pagination__button:disabled {
+  background-color: rgba(0, 0, 0, 0.12);
+  color: rgba(0, 0, 0, 0.38);
+  cursor: default;
+}
+
+.pagination__button .material-icons {
+  font-size: 18px;
 }
 
 .pagination__label {
