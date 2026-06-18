@@ -4,10 +4,13 @@ import { fetchPokemon, fetchPokemonDetails } from "./data/pokemon";
 import TopBar from "./components/TopBar.vue";
 import Sheet from "./components/Sheet.vue";
 
-const sheetRef = ref(null);
 const allPokemon = ref([]);
 const favoritedPokemon = ref([]);
 const searchQuery = ref("");
+
+const sheetOpen = ref(false);
+const selectedPokemon = ref(null);
+const selectedPokemonId = ref(null);
 
 const FETCH_LIMIT = 1350;
 
@@ -30,8 +33,17 @@ onMounted(async () => {
 });
 
 async function handleViewPokemon(pokemonId) {
-  const detail = await fetchPokemonDetails(pokemonId);
-  sheetRef.value.openSheet({ id: pokemonId, detail });
+  selectedPokemon.value = await fetchPokemonDetails(pokemonId);
+  selectedPokemonId.value = Number(pokemonId);
+  sheetOpen.value = true;
+}
+
+function handleCloseSheet() {
+  sheetOpen.value = false;
+  setTimeout(() => {
+    selectedPokemon.value = null;
+    selectedPokemonId.value = null;
+  }, 300);
 }
 
 function handleFavoritePokemon(pokemonId) {
@@ -53,7 +65,12 @@ function handleFavoritePokemon(pokemonId) {
     @search="searchQuery = $event"
     @clear="searchQuery = ''"
   />
-  <Sheet ref="sheetRef" />
+  <Sheet
+    :pokemon="selectedPokemon"
+    :pokemon-id="selectedPokemonId"
+    :is-open="sheetOpen"
+    @close="handleCloseSheet"
+  />
   <main class="mdc-top-app-bar--fixed-adjust">
     <RouterView
       :all-pokemon="allPokemon"

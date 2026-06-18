@@ -1,25 +1,36 @@
 <script setup>
-import { computed } from 'vue';
-import PokemonList from '../components/PokemonList.vue';
-import PaginationButtons from '../components/PaginationButtons.vue';
-import { usePagination } from '../composables/usePagination';
+import { computed } from "vue";
+import PokemonList from "../components/PokemonList.vue";
+import PaginationButtons from "../components/PaginationButtons.vue";
+import { usePagination } from "../js/usePagination.js";
 
-const props = defineProps(['allPokemon', 'favoritedPokemon', 'searchQuery']);
-defineEmits(['view', 'favorite']);
+const props = defineProps(["allPokemon", "favoritedPokemon", "searchQuery"]);
+defineEmits(["view", "favorite"]);
 
 const POKEMON_PER_PAGE = 40;
 
 // Filtert de volledige lijst op de zoekopdracht (zoekt op naam).
 const filteredPokemon = computed(() => {
   const query = props.searchQuery?.toLowerCase();
-  if (!query) return props.allPokemon;
+
+  if (!query) {
+    return props.allPokemon;
+  }
+
   return props.allPokemon.filter((pokemon) =>
-    pokemon.name.toLowerCase().includes(query)
+    pokemon.name.toLowerCase().includes(query),
   );
 });
 
-const { currentPage, pageCount, pagedItems, nextPage, previousPage, goToPage } =
-  usePagination(filteredPokemon, POKEMON_PER_PAGE);
+// Paginatie: verdeel de gefilterde lijst in pagina's van 40 items.
+const {
+  currentPage,      // Huidige pagina (1, 2, 3, ...)
+  pageCount,        // Totaal aantal pagina's
+  pagedItems,       // De items voor deze pagina
+  nextPage,         // Functie: volgende pagina
+  previousPage,     // Functie: vorige pagina
+  goToPage,         // Functie: naar specifieke pagina springen
+} = usePagination(filteredPokemon, POKEMON_PER_PAGE);
 </script>
 
 <template>

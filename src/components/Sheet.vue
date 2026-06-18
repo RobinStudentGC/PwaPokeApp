@@ -1,131 +1,146 @@
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { watch, computed } from "vue";
 
-const isOpen = ref(false)
+const props = defineProps({
+  pokemon: { type: Object, default: null },
+  pokemonId: { type: Number, default: null },
+  isOpen: { type: Boolean, default: false },
+});
+
+const emit = defineEmits(["close"]);
 
 // Zorgt ervoor dat scrollen niet meer kan als de sheet open is.
-watch(isOpen, (open) => {
-  document.body.classList.toggle('no-scroll', open)
-})
-
-const pokemon = ref(null)
-const pokemonId = ref(null)
-
-function openSheet({ detail, id }) {
-  pokemon.value = detail
-  pokemonId.value = id
-  isOpen.value = true
-}
+watch(
+  () => props.isOpen,
+  (open) => {
+    document.body.classList.toggle("no-scroll", open);
+  },
+);
 
 function closeSheet() {
-  isOpen.value = false
-  // Wacht tot de uitschuif-animatie klaar is voordat we de data wissen.
-  setTimeout(() => {
-    pokemon.value = null
-    pokemonId.value = null
-  }, 300)
+  emit("close");
 }
 
-defineExpose({ openSheet, closeSheet })
+const EMPTY = "-";
 
-// Waarde die we tonen als een gegeven ontbreekt.
-const EMPTY = '-'
-
-// Afgeleide gegevens uit het pokemon-object.
-const types = computed(() => pokemon.value?.types?.map(t => t.type.name) || [])
-const stats = computed(() => pokemon.value?.stats || [])
-const totalStats = computed(() => stats.value.reduce((sum, s) => sum + s.base_stat, 0))
+const types = computed(
+  () => props.pokemon?.types?.map((t) => t.type.name) || [],
+);
+const stats = computed(() => props.pokemon?.stats || []);
+const totalStats = computed(() =>
+  stats.value.reduce((sum, s) => sum + s.base_stat, 0),
+);
 
 const height = computed(() => {
-  // De API geeft de hoogte in decimeters, wij tonen meters.
-  return pokemon.value?.height != null
-    ? (pokemon.value.height / 10).toFixed(1) + ' m'
-    : EMPTY
-})
+  // De API geeft de hoogte in decimeters. Verander het naar meter.
+  return props.pokemon?.height != null
+    ? (props.pokemon.height / 10).toFixed(1) + " m"
+    : EMPTY;
+});
 
 const weight = computed(() => {
-  // De API geeft het gewicht in hectogrammen, wij tonen kilo's.
-  return pokemon.value?.weight != null
-    ? (pokemon.value.weight / 10).toFixed(1) + ' kg'
-    : EMPTY
-})
+  // De API geeft het gewicht in hg, ik heb besloten om er kg van te maken.
+  return props.pokemon?.weight != null
+    ? (props.pokemon.weight / 10).toFixed(1) + " kg"
+    : EMPTY;
+});
 
-const abilities = computed(() =>
-  pokemon.value?.abilities?.map(a => a.ability.name).join(', ') || EMPTY
-)
+const abilities = computed(
+  () =>
+    props.pokemon?.abilities?.map((a) => a.ability.name).join(", ") || EMPTY,
+);
 
 const imageUrl = computed(() =>
-  pokemonId.value
-    ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId.value}.png`
-    : ''
-)
+  props.pokemonId
+    ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${props.pokemonId}.png`
+    : "",
+);
 
-const name = computed(() => pokemon.value?.name || `Pokémon #${pokemonId.value}`)
+const name = computed(
+  () => props.pokemon?.name || `Pokémon #${props.pokemonId}`,
+);
 
-// De hoogst voorkomende waarde per stat. Hiermee rekenen we de balk uit als
-// percentage, zodat de langste balk ongeveer vol is.
-const statMax = { hp: 255, attack: 190, defense: 250, 'special-attack': 194, 'special-defense': 250, speed: 200 }
-const statLabel = { hp: 'HP', attack: 'Atk', defense: 'Def', 'special-attack': 'Sp.Atk', 'special-defense': 'Sp.Def', speed: 'Spd' }
+// De hoogst waarde per stat.
+const statMax = {
+  hp: 255,
+  attack: 190,
+  defense: 250,
+  "special-attack": 194,
+  "special-defense": 250,
+  speed: 200,
+};
+const statLabel = {
+  hp: "HP",
+  attack: "Atk",
+  defense: "Def",
+  "special-attack": "Sp.Atk",
+  "special-defense": "Sp.Def",
+  speed: "Spd",
+};
 
 function statPercent(statName, value) {
-  return Math.round((value / (statMax[statName] || 255)) * 100)
+  return Math.round((value / (statMax[statName] || 255)) * 100);
 }
 
 function statColor(value) {
-  if (value >= 100) return '#1D9E75' // goede stats
-  if (value >= 60) return '#EF9F27' // gemiddelde stats
-  return '#D85A30' // lage stats
+  if (value >= 100) return "#1D9E75"; // goede stats
+  if (value >= 60) return "#EF9F27"; // gemiddelde stats
+  return "#D85A30"; // lage stats
 }
 
 const typeColors = {
-  fire:     { bg: '#FAECE7', text: '#993C1D' },
-  water:    { bg: '#E6F1FB', text: '#185FA5' },
-  grass:    { bg: '#EAF3DE', text: '#3B6D11' },
-  poison:   { bg: '#FBEAF0', text: '#993556' },
-  electric: { bg: '#FAEEDA', text: '#854F0B' },
-  psychic:  { bg: '#FBEAF0', text: '#72243E' },
-  ice:      { bg: '#E6F1FB', text: '#0C447C' },
-  dragon:   { bg: '#EEEDFE', text: '#3C3489' },
-  dark:     { bg: '#D3D1C7', text: '#2C2C2A' },
-  fairy:    { bg: '#FBEAF0', text: '#D4537E' },
-  fighting: { bg: '#FAECE7', text: '#712B13' },
-  flying:   { bg: '#E6F1FB', text: '#378ADD' },
-  ground:   { bg: '#FAEEDA', text: '#633806' },
-  rock:     { bg: '#D3D1C7', text: '#5F5E5A' },
-  bug:      { bg: '#EAF3DE', text: '#639922' },
-  ghost:    { bg: '#EEEDFE', text: '#534AB7' },
-  steel:    { bg: '#D3D1C7', text: '#444441' },
-  normal:   { bg: '#F1EFE8', text: '#5F5E5A' },
-}
+  fire: { bg: "#FAECE7", text: "#993C1D" },
+  water: { bg: "#E6F1FB", text: "#185FA5" },
+  grass: { bg: "#EAF3DE", text: "#3B6D11" },
+  poison: { bg: "#FBEAF0", text: "#993556" },
+  electric: { bg: "#FAEEDA", text: "#854F0B" },
+  psychic: { bg: "#FBEAF0", text: "#72243E" },
+  ice: { bg: "#E6F1FB", text: "#0C447C" },
+  dragon: { bg: "#EEEDFE", text: "#3C3489" },
+  dark: { bg: "#D3D1C7", text: "#2C2C2A" },
+  fairy: { bg: "#FBEAF0", text: "#D4537E" },
+  fighting: { bg: "#FAECE7", text: "#712B13" },
+  flying: { bg: "#E6F1FB", text: "#378ADD" },
+  ground: { bg: "#FAEEDA", text: "#633806" },
+  rock: { bg: "#D3D1C7", text: "#5F5E5A" },
+  bug: { bg: "#EAF3DE", text: "#639922" },
+  ghost: { bg: "#EEEDFE", text: "#534AB7" },
+  steel: { bg: "#D3D1C7", text: "#444441" },
+  normal: { bg: "#F1EFE8", text: "#5F5E5A" },
+};
 
 function typeStyle(typeName) {
-  const c = typeColors[typeName] || { bg: '#F1EFE8', text: '#5F5E5A' }
-  return `background:${c.bg}; color:${c.text};`
+  const c = typeColors[typeName] || { bg: "#F1EFE8", text: "#5F5E5A" };
+  return `background:${c.bg}; color:${c.text};`;
 }
 </script>
 
 <template>
   <section class="sheet" :class="{ 'sheet-out-of-view': !isOpen }">
-
     <header class="sheet-header">
-      <button class="close-btn" @click="closeSheet" aria-label="Close">✕</button>
+      <button class="close-btn" @click="closeSheet" aria-label="Close">
+        ✕
+      </button>
       <span class="pokemon-num" v-if="pokemonId">
-        #{{ String(pokemonId).padStart(3, '0') }}
+        #{{ String(pokemonId) }}
       </span>
     </header>
 
     <div class="sheet-body">
-
       <div class="artwork-wrap">
         <img :src="imageUrl" :alt="name" class="artwork" />
       </div>
 
       <div class="info-panel">
-
         <h1 class="pokemon-name">{{ name }}</h1>
 
         <div class="types" v-if="types.length">
-          <span v-for="type in types" :key="type" class="type-badge" :style="typeStyle(type)">
+          <span
+            v-for="type in types"
+            :key="type"
+            class="type-badge"
+            :style="typeStyle(type)"
+          >
             {{ type }}
           </span>
         </div>
@@ -152,18 +167,20 @@ function typeStyle(typeName) {
           </div>
 
           <div v-for="stat in stats" :key="stat.stat.name" class="stat-row">
-            <span class="stat-name">{{ statLabel[stat.stat.name] || stat.stat.name }}</span>
+            <span class="stat-name">{{
+              statLabel[stat.stat.name] || stat.stat.name
+            }}</span>
             <span class="stat-val">{{ stat.base_stat }}</span>
             <div class="stat-bar-bg">
-              <div class="stat-bar-fill"
-                :style="`width:${statPercent(stat.stat.name, stat.base_stat)}%; background:${statColor(stat.base_stat)}`" />
+              <div
+                class="stat-bar-fill"
+                :style="`width:${statPercent(stat.stat.name, stat.base_stat)}%; background:${statColor(stat.base_stat)}`"
+              />
             </div>
           </div>
         </div>
-
       </div>
     </div>
-
   </section>
 </template>
 
@@ -355,6 +372,6 @@ function typeStyle(typeName) {
 .stat-bar-fill {
   height: 100%;
   border-radius: 999px;
-  transition: width 0.4s ease;
+  transition: width 0.3s ease;
 }
 </style>
