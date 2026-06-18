@@ -8,7 +8,7 @@ const emit = defineEmits(["previous", "next", "change"]);
 
 function onPageInput(event) {
   const value = Number(event.target.value);
-  
+
   if (!isNaN(value)) {
     emit("change", value);
   }

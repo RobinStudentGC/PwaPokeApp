@@ -1,13 +1,13 @@
 <script setup>
-import { computed } from "vue";
+import { ref, computed, watch } from "vue";
 import PokemonList from "../components/PokemonList.vue";
 import PaginationButtons from "../components/PaginationButtons.vue";
-import { usePagination } from "../js/usePagination.js";
 
 const props = defineProps(["allPokemon", "favoritedPokemon", "searchQuery"]);
 defineEmits(["view", "favorite"]);
 
 const POKEMON_PER_PAGE = 40;
+const currentPage = ref(1);
 
 // Filtert de volledige lijst op de zoekopdracht (zoekt op naam).
 const filteredPokemon = computed(() => {
@@ -22,15 +22,37 @@ const filteredPokemon = computed(() => {
   );
 });
 
-// Paginatie: verdeel de gefilterde lijst in pagina's van 40 items.
-const {
-  currentPage,      // Huidige pagina (1, 2, 3, ...)
-  pageCount,        // Totaal aantal pagina's
-  pagedItems,       // De items voor deze pagina
-  nextPage,         // Functie: volgende pagina
-  previousPage,     // Functie: vorige pagina
-  goToPage,         // Functie: naar specifieke pagina springen
-} = usePagination(filteredPokemon, POKEMON_PER_PAGE);
+const pageCount = computed(() =>
+  Math.max(1, Math.ceil(filteredPokemon.value.length / POKEMON_PER_PAGE)),
+);
+
+const pagedPokemon = computed(() => {
+  const start = (currentPage.value - 1) * POKEMON_PER_PAGE;
+  return filteredPokemon.value.slice(start, start + POKEMON_PER_PAGE);
+});
+
+function goToPage(page) {
+  const target = Number(page);
+  if (target < 1) {
+    currentPage.value = 1;
+  } else if (target > pageCount.value) {
+    currentPage.value = pageCount.value;
+  } else {
+    currentPage.value = target;
+  }
+}
+
+function nextPage() {
+  goToPage(currentPage.value + 1);
+}
+
+function previousPage() {
+  goToPage(currentPage.value - 1);
+}
+
+watch(() => props.searchQuery, () => {
+  currentPage.value = 1;
+});
 </script>
 
 <template>
@@ -42,7 +64,7 @@ const {
     @change="goToPage"
   />
   <PokemonList
-    :pokemon="pagedItems"
+    :pokemon="pagedPokemon"
     :favorited="favoritedPokemon"
     @view="$emit('view', $event)"
     @favorite="$emit('favorite', $event)"

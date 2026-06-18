@@ -1,13 +1,13 @@
 <script setup>
-import { computed } from "vue";
+import { ref, computed, watch } from "vue";
 import PokemonList from "../components/PokemonList.vue";
 import PaginationButtons from "../components/PaginationButtons.vue";
-import { usePagination } from "../js/usePagination.js";
 
 const props = defineProps(["allPokemon", "favoritedPokemon", "searchQuery"]);
 defineEmits(["view", "favorite"]);
 
 const POKEMON_PER_PAGE = 40;
+const currentPage = ref(1);
 
 function getId(url) {
   const parts = url.split("/").filter(Boolean);
@@ -24,8 +24,38 @@ const favoritePokemon = computed(() => {
   });
 });
 
-const { currentPage, pageCount, pagedItems, nextPage, previousPage, goToPage } =
-  usePagination(favoritePokemon, POKEMON_PER_PAGE);
+const pageCount = computed(() =>
+  Math.max(1, Math.ceil(favoritePokemon.value.length / POKEMON_PER_PAGE)),
+);
+
+const pagedPokemon = computed(() => {
+  const start = (currentPage.value - 1) * POKEMON_PER_PAGE;
+  return favoritePokemon.value.slice(start, start + POKEMON_PER_PAGE);
+});
+
+function goToPage(page) {
+  const target = Number(page);
+  if (target < 1) {
+    currentPage.value = 1;
+  } else if (target > pageCount.value) {
+    currentPage.value = pageCount.value;
+  } else {
+    currentPage.value = target;
+  }
+}
+
+function nextPage() {
+  goToPage(currentPage.value + 1);
+}
+
+function previousPage() {
+  goToPage(currentPage.value - 1);
+}
+
+// Bij een nieuwe zoekopdracht beginnen we weer bij pagina 1.
+watch(() => props.searchQuery, () => {
+  currentPage.value = 1;
+});
 </script>
 
 <template>
@@ -41,7 +71,7 @@ const { currentPage, pageCount, pagedItems, nextPage, previousPage, goToPage } =
   </p>
   <PokemonList
     v-else
-    :pokemon="pagedItems"
+    :pokemon="pagedPokemon"
     :favorited="favoritedPokemon"
     @view="$emit('view', $event)"
     @favorite="$emit('favorite', $event)"
