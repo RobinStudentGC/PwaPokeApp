@@ -1,47 +1,39 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { computed } from 'vue';
 import PokemonList from '../components/PokemonList.vue';
 import PaginationButtons from '../components/PaginationButtons.vue';
+import { usePagination } from '../composables/usePagination';
 
 const props = defineProps(['allPokemon', 'favoritedPokemon', 'searchQuery']);
-const emit = defineEmits(['view', 'favorite']);
+defineEmits(['view', 'favorite']);
 
-const PAGINATION_LIMIT = 40;
-const currentPage = ref(1);
+const POKEMON_PER_PAGE = 40;
 
+// Filtert de volledige lijst op de zoekopdracht (zoekt op naam).
 const filteredPokemon = computed(() => {
-    const query = props.searchQuery?.toLowerCase();
-    if (!query) return props.allPokemon;
-    return props.allPokemon.filter((pokemon) =>
-        pokemon.name.toLowerCase().includes(query)
-    );
+  const query = props.searchQuery?.toLowerCase();
+  if (!query) return props.allPokemon;
+  return props.allPokemon.filter((pokemon) =>
+    pokemon.name.toLowerCase().includes(query)
+  );
 });
 
-const pageCount = computed(() =>
-    Math.ceil(filteredPokemon.value.length / PAGINATION_LIMIT)
-);
-
-const pokemonPaginated = computed(() => {
-    const start = (currentPage.value - 1) * PAGINATION_LIMIT;
-    return filteredPokemon.value.slice(start, start + PAGINATION_LIMIT);
-});
-
-function updatePagination(direction) {
-    if (direction === 'previous' && currentPage.value > 1) currentPage.value--;
-    else if (direction === 'next' && currentPage.value < pageCount.value) currentPage.value++;
-}
-
-function changePage(pageInput) {
-    currentPage.value = Math.min(Math.max(Number(pageInput), 1), pageCount.value);
-}
-
-// Reset naar de eerste pagina als de zoekopdracht verandert of als het aantal pagina's verandert.
-watch([() => props.searchQuery, pageCount], () => { currentPage.value = 1; });
+const { currentPage, pageCount, pagedItems, nextPage, previousPage, goToPage } =
+  usePagination(filteredPokemon, POKEMON_PER_PAGE);
 </script>
 
 <template>
-    <PaginationButtons :current-page="currentPage" :page-count="pageCount" @previous="updatePagination('previous')"
-        @next="updatePagination('next')" @change="changePage" />
-    <PokemonList :pokemon="pokemonPaginated" :favorited="favoritedPokemon" @view="$emit('view', $event)"
-        @favorite="$emit('favorite', $event)" />
+  <PaginationButtons
+    :current-page="currentPage"
+    :page-count="pageCount"
+    @previous="previousPage"
+    @next="nextPage"
+    @change="goToPage"
+  />
+  <PokemonList
+    :pokemon="pagedItems"
+    :favorited="favoritedPokemon"
+    @view="$emit('view', $event)"
+    @favorite="$emit('favorite', $event)"
+  />
 </template>

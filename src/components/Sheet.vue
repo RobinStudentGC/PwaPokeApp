@@ -8,13 +8,9 @@ watch(isOpen, (open) => {
   document.body.classList.toggle('no-scroll', open)
 })
 
-// --- Data shown in the sheet ---
-const pokemon = ref(null)   // the full pokemon detail object from the API
+const pokemon = ref(null)
 const pokemonId = ref(null)
 
-// --- Open / close ---
-// defineExpose lets a parent component call these methods via a template ref:
-// e.g. <PokemonSheet ref="sheet" /> then sheet.value.openSheet(...)
 function openSheet({ detail, id }) {
   pokemon.value = detail
   pokemonId.value = id
@@ -23,7 +19,7 @@ function openSheet({ detail, id }) {
 
 function closeSheet() {
   isOpen.value = false
-  // Wait for the slide-out animation to finish before clearing data
+  // Wacht tot de uitschuif-animatie klaar is voordat we de data wissen.
   setTimeout(() => {
     pokemon.value = null
     pokemonId.value = null
@@ -32,27 +28,30 @@ function closeSheet() {
 
 defineExpose({ openSheet, closeSheet })
 
-// --- Derived data from the pokemon object ---
+// Waarde die we tonen als een gegeven ontbreekt.
+const EMPTY = '-'
+
+// Afgeleide gegevens uit het pokemon-object.
 const types = computed(() => pokemon.value?.types?.map(t => t.type.name) || [])
 const stats = computed(() => pokemon.value?.stats || [])
 const totalStats = computed(() => stats.value.reduce((sum, s) => sum + s.base_stat, 0))
 
 const height = computed(() => {
-  // API gives height in decimetres, convert to metres
+  // De API geeft de hoogte in decimeters, wij tonen meters.
   return pokemon.value?.height != null
     ? (pokemon.value.height / 10).toFixed(1) + ' m'
-    : '—'
+    : EMPTY
 })
 
 const weight = computed(() => {
-  // API gives weight in hectograms, convert to kilograms
+  // De API geeft het gewicht in hectogrammen, wij tonen kilo's.
   return pokemon.value?.weight != null
     ? (pokemon.value.weight / 10).toFixed(1) + ' kg'
-    : '—'
+    : EMPTY
 })
 
 const abilities = computed(() =>
-  pokemon.value?.abilities?.map(a => a.ability.name).join(', ') || '—'
+  pokemon.value?.abilities?.map(a => a.ability.name).join(', ') || EMPTY
 )
 
 const imageUrl = computed(() =>
@@ -63,20 +62,19 @@ const imageUrl = computed(() =>
 
 const name = computed(() => pokemon.value?.name || `Pokémon #${pokemonId.value}`)
 
-// --- Stat bar helpers ---
-// Volgens AI zijn dit de maximum stats die een pokemon kan hebben.
-// Dit wordt dan gebruikt om de lengte van de stat bars te bepalen als percentage van het maximum.
+// De hoogst voorkomende waarde per stat. Hiermee rekenen we de balk uit als
+// percentage, zodat de langste balk ongeveer vol is.
 const statMax = { hp: 255, attack: 190, defense: 250, 'special-attack': 194, 'special-defense': 250, speed: 200 }
 const statLabel = { hp: 'HP', attack: 'Atk', defense: 'Def', 'special-attack': 'Sp.Atk', 'special-defense': 'Sp.Def', speed: 'Spd' }
 
-function statPercent(name, value) {
-  return Math.round((value / (statMax[name] || 255)) * 100)
+function statPercent(statName, value) {
+  return Math.round((value / (statMax[statName] || 255)) * 100)
 }
 
 function statColor(value) {
   if (value >= 100) return '#1D9E75' // goede stats
-  if (value >= 60)  return '#EF9F27' // gemiddelde stats
-  return '#D85A30'                   // lage stats
+  if (value >= 60) return '#EF9F27' // gemiddelde stats
+  return '#D85A30' // lage stats
 }
 
 const typeColors = {
