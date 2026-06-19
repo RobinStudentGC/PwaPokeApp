@@ -6,7 +6,7 @@ import PaginationButtons from "../components/PaginationButtons.vue";
 const props = defineProps(["allPokemon", "favoritedPokemon", "searchQuery"]);
 defineEmits(["view", "favorite"]);
 
-const POKEMON_PER_PAGE = 40;
+const paginationLimit = 40;
 const currentPage = ref(1);
 
 // Filtert de volledige lijst op de zoekopdracht (zoekt op naam).
@@ -23,12 +23,12 @@ const filteredPokemon = computed(() => {
 });
 
 const pageCount = computed(() =>
-  Math.max(1, Math.ceil(filteredPokemon.value.length / POKEMON_PER_PAGE)),
+  Math.max(1, Math.ceil(filteredPokemon.value.length / paginationLimit)),
 );
 
 const pagedPokemon = computed(() => {
-  const start = (currentPage.value - 1) * POKEMON_PER_PAGE;
-  return filteredPokemon.value.slice(start, start + POKEMON_PER_PAGE);
+  const start = (currentPage.value - 1) * paginationLimit;
+  return filteredPokemon.value.slice(start, start + paginationLimit);
 });
 
 function goToPage(page) {

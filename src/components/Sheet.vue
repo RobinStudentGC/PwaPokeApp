@@ -21,33 +21,35 @@ function closeSheet() {
   emit("close");
 }
 
-const EMPTY = "-";
+const empty = "-";
 
 const types = computed(
   () => props.pokemon?.types?.map((t) => t.type.name) || [],
 );
+
 const stats = computed(() => props.pokemon?.stats || []);
+
 const totalStats = computed(() =>
   stats.value.reduce((sum, s) => sum + s.base_stat, 0),
 );
 
 const height = computed(() => {
-  // De API geeft de hoogte in decimeters. Verander het naar meter.
+  // De API geeft de hoogte in decimeters. Verander het naar meters.
   return props.pokemon?.height != null
     ? (props.pokemon.height / 10).toFixed(1) + " m"
-    : EMPTY;
+    : empty;
 });
 
 const weight = computed(() => {
   // De API geeft het gewicht in hg, ik heb besloten om er kg van te maken.
   return props.pokemon?.weight != null
     ? (props.pokemon.weight / 10).toFixed(1) + " kg"
-    : EMPTY;
+    : empty;
 });
 
 const abilities = computed(
   () =>
-    props.pokemon?.abilities?.map((a) => a.ability.name).join(", ") || EMPTY,
+    props.pokemon?.abilities?.map((a) => a.ability.name).join(", ") || empty,
 );
 
 const imageUrl = computed(() =>

@@ -6,12 +6,12 @@ const router = createRouter({
     {
       path: "/",
       name: "home",
-      component: () => import("../view/HomeView.vue"), // ← view not views
+      component: () => import("../view/HomeView.vue"),
     },
     {
       path: "/favorites",
       name: "favorites",
-      component: () => import("../view/FavoritesView.vue"), // ← view not views
+      component: () => import("../view/FavoritesView.vue"),
     },
   ],
 });
