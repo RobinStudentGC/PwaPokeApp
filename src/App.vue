@@ -12,7 +12,7 @@ const sheetOpen = ref(false);
 const selectedPokemon = ref(null);
 const selectedPokemonId = ref(null);
 
-const FETCH_LIMIT = 1350;
+const fetchLimit = 1350;
 
 onMounted(async () => {
   // We doen maar 1 call voor de volledige lijst en bewaren die in localStorage.
@@ -21,7 +21,7 @@ onMounted(async () => {
   if (cachedList) {
     allPokemon.value = JSON.parse(cachedList);
   } else {
-    const data = await fetchPokemon(FETCH_LIMIT);
+    const data = await fetchPokemon(fetchLimit);
     allPokemon.value = data;
     localStorage.setItem("pokemon-list", JSON.stringify(data));
   }
