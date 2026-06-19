@@ -12,7 +12,7 @@ const sheetOpen = ref(false);
 const selectedPokemon = ref(null);
 const selectedPokemonId = ref(null);
 
-const FETCH_LIMIT = 1350;
+const fetchLimit = 1350;
 
 onMounted(async () => {
   // We doen maar 1 call voor de volledige lijst en bewaren die in localStorage.
@@ -21,7 +21,7 @@ onMounted(async () => {
   if (cachedList) {
     allPokemon.value = JSON.parse(cachedList);
   } else {
-    const data = await fetchPokemon(FETCH_LIMIT);
+    const data = await fetchPokemon(fetchLimit);
     allPokemon.value = data;
     localStorage.setItem("pokemon-list", JSON.stringify(data));
   }
@@ -49,12 +49,15 @@ function handleCloseSheet() {
 function handleFavoritePokemon(pokemonId) {
   const id = Number(pokemonId);
   const favorites = favoritedPokemon.value;
-  const index = favorites.indexOf(id);
-  if (index === -1) {
-    favorites.push(id);
-  } else {
+  const isFavorited = favorites.includes(id);
+
+  if (isFavorited) {
+    const index = favorites.indexOf(id);
     favorites.splice(index, 1);
+  } else {
+    favorites.push(id);
   }
+
   localStorage.setItem("pokemon-favorites", JSON.stringify(favorites));
 }
 </script>

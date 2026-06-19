@@ -41,7 +41,7 @@ const height = computed(() => {
 });
 
 const weight = computed(() => {
-  // De API geeft het gewicht in hg, ik heb besloten om er kg van te maken.
+  // De API geeft het gewicht in hg. Ik heb besloten om er kg van te maken.
   return props.pokemon?.weight != null
     ? (props.pokemon.weight / 10).toFixed(1) + " kg"
     : empty;

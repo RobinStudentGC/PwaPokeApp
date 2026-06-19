@@ -33,7 +33,7 @@ function onPageInput(event) {
         min="1"
         :max="props.pageCount"
         :value="props.currentPage"
-        @change="onPageInput"
+        @input="onPageInput"
       />
       <span class="pagination__text">of {{ props.pageCount }}</span>
     </div>

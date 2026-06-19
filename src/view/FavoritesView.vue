@@ -53,9 +53,12 @@ function previousPage() {
 }
 
 // Bij een nieuwe zoekopdracht beginnen we weer bij pagina 1.
-watch(() => props.searchQuery, () => {
-  currentPage.value = 1;
-});
+watch(
+  () => props.searchQuery,
+  () => {
+    currentPage.value = 1;
+  },
+);
 </script>
 
 <template>
