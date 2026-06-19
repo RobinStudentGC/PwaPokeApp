@@ -49,12 +49,15 @@ function handleCloseSheet() {
 function handleFavoritePokemon(pokemonId) {
   const id = Number(pokemonId);
   const favorites = favoritedPokemon.value;
-  const index = favorites.indexOf(id);
-  if (index === -1) {
-    favorites.push(id);
-  } else {
+  const isFavorited = favorites.includes(id);
+
+  if (isFavorited) {
+    const index = favorites.indexOf(id);
     favorites.splice(index, 1);
+  } else {
+    favorites.push(id);
   }
+
   localStorage.setItem("pokemon-favorites", JSON.stringify(favorites));
 }
 </script>

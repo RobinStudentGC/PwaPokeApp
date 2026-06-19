@@ -50,9 +50,12 @@ function previousPage() {
   goToPage(currentPage.value - 1);
 }
 
-watch(() => props.searchQuery, () => {
-  currentPage.value = 1;
-});
+watch(
+  () => props.searchQuery,
+  () => {
+    currentPage.value = 1;
+  },
+);
 </script>
 
 <template>
