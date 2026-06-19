@@ -49,7 +49,7 @@ const weight = computed(() => {
 
 const abilities = computed(
   () =>
-    props.pokemon?.abilities?.map((a) => a.ability.name).join(", ") || empty,
+    props.pokemon?.abilities?.map((ability) => ability.ability.name).join(", ") || empty,
 );
 
 const imageUrl = computed(() =>
@@ -137,12 +137,7 @@ function typeStyle(typeName) {
         <h1 class="pokemon-name">{{ name }}</h1>
 
         <div class="types" v-if="types.length">
-          <span
-            v-for="type in types"
-            :key="type"
-            class="type-badge"
-            :style="typeStyle(type)"
-          >
+          <span v-for="type in types" :key="type" class="type-badge" :style="typeStyle(type)">
             {{ type }}
           </span>
         </div>
@@ -174,10 +169,8 @@ function typeStyle(typeName) {
             }}</span>
             <span class="stat-val">{{ stat.base_stat }}</span>
             <div class="stat-bar-bg">
-              <div
-                class="stat-bar-fill"
-                :style="`width:${statPercent(stat.stat.name, stat.base_stat)}%; background:${statColor(stat.base_stat)}`"
-              />
+              <div class="stat-bar-fill"
+                :style="`width:${statPercent(stat.stat.name, stat.base_stat)}%; background:${statColor(stat.base_stat)}`" />
             </div>
           </div>
         </div>
