@@ -70,7 +70,7 @@ watch(
     @change="goToPage"
   />
   <p v-if="favoritePokemon.length === 0" class="empty-message">
-    {{ searchQuery ? "No favorites match your search." : "No favorites yet!" }}
+    {{ searchQuery ? "No favorites match your search." : "No favorites yet." }}
   </p>
   <PokemonList
     v-else
