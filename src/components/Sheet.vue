@@ -24,13 +24,13 @@ function closeSheet() {
 const empty = "-";
 
 const types = computed(
-  () => props.pokemon?.types?.map((t) => t.type.name) || [],
+  () => props.pokemon?.types?.map((type) => type.type.name) || [],
 );
 
 const stats = computed(() => props.pokemon?.stats || []);
 
 const totalStats = computed(() =>
-  stats.value.reduce((sum, s) => sum + s.base_stat, 0),
+  stats.value.reduce((sum, stat) => sum + stat.base_stat, 0),
 );
 
 const height = computed(() => {
@@ -112,8 +112,8 @@ const typeColors = {
 };
 
 function typeStyle(typeName) {
-  const c = typeColors[typeName] || { bg: "#F1EFE8", text: "#5F5E5A" };
-  return `background:${c.bg}; color:${c.text};`;
+  const color = typeColors[typeName] || { bg: "#F1EFE8", text: "#5F5E5A" };
+  return `background:${color.bg}; color:${color.text};`;
 }
 </script>
 
